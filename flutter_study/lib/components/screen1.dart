@@ -9,10 +9,6 @@ class Screen1 extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            Text(
-              'This is the Home Screen',
-              style: TextStyle(fontSize: 24.0),
-            ),
             SizedBox(height: 20),
             ElevatedButton(
               onPressed: () {
@@ -21,7 +17,7 @@ class Screen1 extends StatelessWidget {
                   MaterialPageRoute(builder: (context) => Bmi()),
                 );
               },
-              child: Text('Go to BMI Calculator'),
+              child: Text('BMI 계산기'),
             ),
           ],
         ),

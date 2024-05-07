@@ -21,20 +21,20 @@ class _BmiState extends State<Bmi> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             TextFormField(
-              controller: weightController,
-              keyboardType: TextInputType.number,
-              decoration: InputDecoration(labelText: '몸무게 (kg)'),
-            ),
-            TextFormField(
               controller: heightController,
               keyboardType: TextInputType.number,
               decoration: InputDecoration(labelText: '키 (cm)'),
             ),
+            TextFormField(
+              controller: weightController,
+              keyboardType: TextInputType.number,
+              decoration: InputDecoration(labelText: '몸무게 (kg)'),
+            ),
             SizedBox(height: 20),
             ElevatedButton(
               onPressed: () {
-                double weight = double.tryParse(weightController.text) ?? 0.0;
                 double height = double.tryParse(heightController.text) ?? 0.0;
+                double weight = double.tryParse(weightController.text) ?? 0.0;
                 if (weight > 0 && height > 0) {
                   double bmi = weight / ((height / 100) * (height / 100));
                   setState(() {
