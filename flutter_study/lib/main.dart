@@ -58,7 +58,7 @@ class _MyHomePageState extends State<MyHomePage> {
             label: 'Home',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.format_list_bulleted),
+            icon: Icon(Icons.view_list),
             label: 'List',
           ),
           BottomNavigationBarItem(
