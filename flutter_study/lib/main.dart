@@ -58,8 +58,8 @@ class _MyHomePageState extends State<MyHomePage> {
             label: 'Home',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Profile',
+            icon: Icon(Icons.format_list_bulleted),
+            label: 'List',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.settings),
