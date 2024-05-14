@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-// 버튼 스타일 클래스 정의
 class MyButtonStyle {
   static final ButtonStyle outlinedButtonStyle = ButtonStyle(
     side: MaterialStateProperty.all<BorderSide>(BorderSide(color: Colors.blue)), // 테두리 색상 지정
