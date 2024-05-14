@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'components/screen1.dart';
 import 'components/screen2.dart';
 import 'components/screen3.dart';
 
 void main() {
+  initializeDateFormatting('ko_KR', null);
   runApp(MyApp());
 }
 

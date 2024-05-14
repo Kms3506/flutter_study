@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'bmi.dart';
 import 'button_style.dart';
+import 'calendar.dart';
 
 class Screen1 extends StatelessWidget {
   @override
@@ -18,8 +19,19 @@ class Screen1 extends StatelessWidget {
                 );
               },
               style: MyButtonStyle.outlinedButtonStyle, // 버튼 스타일 적용
-              child: Text('BMI 계산기'),
+              child: Text('BMI 계산기'),              
             ),
+            SizedBox(height: 20),
+            OutlinedButton(
+              onPressed: (){
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => CalendarScreen()),
+                );
+              },
+              style: MyButtonStyle.outlinedButtonStyle,
+              child: Text('캘린더'),
+            )
           ],
         ),
       ),
