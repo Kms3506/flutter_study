@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'button_style.dart';
 
 class Memo extends StatefulWidget {
   final String title;
@@ -43,6 +44,7 @@ class _MemoScreenState extends State<Memo> {
                 // 여기서는 간단히 메모를 출력합니다.
                 print('메모 내용: $memoText');
               },
+              style: MyButtonStyle.outlinedButtonStyle,
               child: Text('저장'),
             ),
           ],
