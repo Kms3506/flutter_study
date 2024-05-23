@@ -1,110 +1,84 @@
 import 'package:flutter/material.dart';
-import 'package:table_calendar/table_calendar.dart';
-import 'package:intl/date_symbol_data_local.dart';
+import 'database_helper.dart';
 
-void main() {
-  initializeDateFormatting('ko_KR', null); // 한국어 로케일 데이터 초기화
-  runApp(MyApp());
-}
+void main() => runApp(MyApp());
 
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Calendar with Memo',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        visualDensity: VisualDensity.adaptivePlatformDensity,
-      ),
-      home: CalendarScreen(),
+      title: 'SQLite Demo',
+      home: StringInputScreen(),
     );
   }
 }
 
-class CalendarScreen extends StatefulWidget {
+class StringInputScreen extends StatefulWidget {
   @override
-  _CalendarScreenState createState() => _CalendarScreenState();
+  _StringInputScreenState createState() => _StringInputScreenState();
 }
 
-class _CalendarScreenState extends State<CalendarScreen> {
-  CalendarFormat _calendarFormat = CalendarFormat.month;
-  DateTime _focusedDay = DateTime.now();
-  DateTime? _selectedDay;
-
-  // 날짜별 메모를 저장하는 맵
-  Map<DateTime, String> _memos = {};
+class _StringInputScreenState extends State<StringInputScreen> {
+  final TextEditingController _controller = TextEditingController();
+  List<String> _strings = [];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('운동 기록'),
+        title: Text('SQLite String Storage'),
       ),
-      body: SingleChildScrollView(
-        child: Center(
-          child: Column(
-            children: [
-              TableCalendar(
-                locale: 'ko_KR', // 한글로 변경
-                firstDay: DateTime.utc(2020, 1, 1),
-                lastDay: DateTime.utc(2030, 12, 31),
-                focusedDay: _focusedDay,
-                calendarFormat: _calendarFormat,
-                onFormatChanged: (format) {
-                  setState(() {
-                    _calendarFormat = format;
-                  });
-                },
-                onDaySelected: (selectedDay, focusedDay) {
-                  setState(() {
-                    _selectedDay = selectedDay;
-                    _focusedDay = focusedDay;
-                  });
+      body: Padding(
+        padding: EdgeInsets.all(16.0),
+        child: Column(
+          children: <Widget>[
+            TextField(
+              controller: _controller,
+              decoration: InputDecoration(labelText: 'Enter a string'),
+            ),
+            SizedBox(height: 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: <Widget>[
+                ElevatedButton(
+                  onPressed: _saveString,
+                  child: Text('Save'),
+                ),
+                ElevatedButton(
+                  onPressed: _loadStrings,
+                  child: Text('Load'),
+                ),
+              ],
+            ),
+            Expanded(
+              child: ListView.builder(
+              itemCount: _strings.length,
+                itemBuilder: (context, index) {
+                  return ListTile(
+                    title: Text(_strings[index]),
+                  );
                 },
               ),
-              SizedBox(height: 20),
-              _selectedDay != null
-                  ? Padding(
-                      padding: const EdgeInsets.all(20.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Text(
-                            '선택한 날짜: ${_selectedDay!.toString().substring(0, 10)}',
-                            style: TextStyle(fontSize: 18),
-                          ),
-                          SizedBox(height: 20),
-                          TextField(
-                            onChanged: (value) {
-                              // 메모 입력이 변경될 때마다 맵에 저장
-                              setState(() {
-                                _memos[_selectedDay!] = value;
-                              });
-                            },
-                            decoration: InputDecoration(
-                              hintText: '여기에 기록을 작성하세요',
-                              border: OutlineInputBorder(),
-                            ),
-                            maxLines: null,
-                          ),
-                          SizedBox(height: 20),
-                          Text(
-                            '운동 기록:',
-                            style: TextStyle(fontSize: 18),
-                          ),
-                          SizedBox(height: 10),
-                          Text(
-                            _memos[_selectedDay] ?? '기록 없음',
-                            style: TextStyle(fontSize: 16),
-                          ),
-                        ],
-                      ),
-                    )
-                  : Container(),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
+  }
+
+  Future<void> _saveString() async {
+    final content = _controller.text;
+    if (content.isNotEmpty) {
+      await DatabaseHelper.instance.insertString(content);
+      _controller.clear();
+      _loadStrings();
+    }
+  }
+
+  Future<void> _loadStrings() async {
+    final strings = await DatabaseHelper.instance.fetchStrings();
+    setState(() {
+      _strings = strings;
+    });
   }
 }
