@@ -1,63 +1,96 @@
-import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
+import 'word.dart';
+import 'package:sqflite/sqflite.dart';
 
-// 이 줄을 추가합니다.
-import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+class DatabaseService {
+  static final DatabaseService _database = DatabaseService._internal();
+  late Future<Database> database;
 
-class DatabaseHelper {
-  static final DatabaseHelper instance = DatabaseHelper._init();
+  factory DatabaseService() => _database;
 
-  static Database? _database;
+  DatabaseService._internal() {
+    databaseConfig();
+  }
 
-  DatabaseHelper._init() {
-    // 데스크톱 환경에서 실행할 때 sqflite_common_ffi를 초기화합니다.
-    if (isFfiEnabled) {
-      sqfliteFfiInit();
-      databaseFactory = databaseFactoryFfi;
+  Future<bool> databaseConfig() async {
+    try {
+      database = openDatabase(
+        join(await getDatabasesPath(), 'word_database.db'),
+        onCreate: (db, version) {
+          return db.execute(
+            'CREATE TABLE words(id INTEGER PRIMARY KEY, name TEXT, meaning TEXT)',
+          );
+        },
+        version: 1,
+      );
+      return true;
+    } catch (err) {
+      print(err.toString());
+      return false;
     }
   }
 
-  // 데스크톱 환경을 감지하는 플래그를 추가합니다.
-  bool get isFfiEnabled => !identical(0, 0.0); // 단순히 데스크톱 환경을 감지합니다.
-
-  Future<Database> get database async {
-    if (_database != null) return _database!;
-
-    _database = await _initDB('example.db');
-    return _database!;
+  Future<bool> insertWord(Word word) async {
+    final Database db = await database;
+    try {
+      db.insert(
+        'words',
+        word.toMap(),
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+      return true;
+    } catch (err) {
+      return false;
+    }
   }
 
-  Future<Database> _initDB(String filePath) async {
-    final dbPath = await getDatabasesPath();
-    final path = join(dbPath, filePath);
+  Future<List<Word>> selectWords() async {
+    final Database db = await database;
+    final List<Map<String, dynamic>> data = await db.query('words');
 
-    return await openDatabase(path, version: 1, onCreate: _createDB);
+    return List.generate(data.length, (i) {
+      return Word(
+        id: data[i]['id'],
+        name: data[i]['name'],
+        meaning: data[i]['meaning'],
+      );
+    });
   }
 
-  Future _createDB(Database db, int version) async {
-    await db.execute('''
-CREATE TABLE strings(
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  content TEXT NOT NULL
-)
-''');
+  Future<Word> selectWord(int id) async {
+    final Database db = await database;
+    final List<Map<String, dynamic>> data =
+        await db.query('words', where: "id = ?", whereArgs: [id]);
+    return Word(
+        id: data[0]['id'], name: data[0]['name'], meaning: data[0]['meaning']);
   }
 
-  Future<void> insertString(String content) async {
-    final db = await instance.database;
-
-    await db.insert(
-      'strings',
-      {'content': content},
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+  Future<bool> updateWord(Word word) async {
+    final Database db = await database;
+    try {
+      db.update(
+        'words',
+        word.toMap(),
+        where: "id = ?",
+        whereArgs: [word.id],
+      );
+      return true;
+    } catch (err) {
+      return false;
+    }
   }
 
-  Future<List<String>> fetchStrings() async {
-    final db = await instance.database;
-
-    final result = await db.query('strings');
-
-    return result.map((row) => row['content'] as String).toList();
+  Future<bool> deleteWord(int id) async {
+    final Database db = await database;
+    try {
+      db.delete(
+        'words',
+        where: "id = ?",
+        whereArgs: [id],
+      );
+      return true;
+    } catch (err) {
+      return false;
+    }
   }
 }
