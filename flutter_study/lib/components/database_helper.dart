@@ -36,8 +36,16 @@ class DatabaseHelper {
     );
   }
 
-  Future<List<Map<String, dynamic>>> getAllMemos() async {
+  Future<String?> getMemo(String date) async {
     final db = await database;
-    return await db.query('memos');
+    List<Map<String, dynamic>> maps = await db.query(
+      'memos',
+      where: 'date = ?',
+      whereArgs: [date],
+    );
+    if (maps.isNotEmpty) {
+      return maps.first['memo'];
+    }
+    return null;
   }
 }
