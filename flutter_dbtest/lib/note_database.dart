@@ -1,5 +1,44 @@
 import 'package:flutter/material.dart';
-import 'note_database.dart';
+import 'package:sqflite/sqflite.dart';
+import 'package:path/path.dart' as path_helper;
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
+
+class NoteDatabase {
+  static Future<Database> openDatabaseAndCreate() async {
+    Directory documentsDirectory = await getApplicationDocumentsDirectory();
+    String dbPath = path_helper.join(documentsDirectory.path, 'notes.db');
+
+    return openDatabase(
+      dbPath,
+      version: 1,
+      onCreate: (Database db, int version) async {
+        await db.execute('''
+          CREATE TABLE IF NOT EXISTS notes (
+            id INTEGER PRIMARY KEY,
+            title TEXT,
+            content TEXT
+          )
+        ''');
+      },
+    );
+  }
+
+  static Future<void> saveNote(String title, String content) async {
+    Database database = await openDatabaseAndCreate();
+
+    try {
+      await database.insert(
+        'notes',
+        {'title': title, 'content': content},
+      );
+    } catch (e) {
+      print('Error saving note: $e');
+    } finally {
+      await database.close();
+    }
+  }
+}
 
 void main() => runApp(MyApp());
 
