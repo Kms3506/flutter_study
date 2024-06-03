@@ -1,20 +1,13 @@
-class Memo {
-  final int? id;
-  final String date;
-  final String memo;
+class Todo {
+  int? id;
+  String content;
 
-  Memo({this.id, required this.date, required this.memo});
+  Todo({this.id, required this.content});
 
   Map<String, dynamic> toMap() {
     return {
       'id': id,
-      'date': date,
-      'memo': memo,
+      'content': content,
     };
-  }
-
-  @override
-  String toString() {
-    return 'Memo{id: $id, date: $date, memo: $memo}';
   }
 }

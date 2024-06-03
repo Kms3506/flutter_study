@@ -1,114 +1,182 @@
 import 'package:flutter/material.dart';
-import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'database_helper.dart';
+import 'memo.dart';
 
 void main() {
-  // FFI 초기화
-  sqfliteFfiInit();
-  // databaseFactory 설정
-  databaseFactory = databaseFactoryFfi;
-
   runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
+  final DatabaseHelper dbHelper = DatabaseHelper();
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Memo App',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
+      home: Scaffold(
+        appBar: AppBar(
+          title: Text('Todo App'),
+        ),
+        body: TodoScreen(dbHelper: dbHelper),
       ),
-      home: MyHomePage(title: 'Memo Database'),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  MyHomePage({Key? key, required this.title}) : super(key: key);
+class TodoScreen extends StatefulWidget {
+  final DatabaseHelper dbHelper;
 
-  final String title;
+  TodoScreen({required this.dbHelper});
 
   @override
-  _MyHomePageState createState() => _MyHomePageState();
+  _TodoScreenState createState() => _TodoScreenState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  final _formKey = GlobalKey<FormState>();
-  final _memoController = TextEditingController();
-  final dbHelper = DatabaseHelper();
+class _TodoScreenState extends State<TodoScreen> {
+  late Future<List<Todo>> todos;
+  TextEditingController contentController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    todos = widget.dbHelper.getTodos();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.title),
-      ),
-      body: Column(
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Form(
-              key: _formKey,
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextFormField(
-                      controller: _memoController,
-                      decoration: InputDecoration(labelText: 'Enter Memo'),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter some text';
-                        }
-                        return null;
-                      },
-                    ),
-                  ),
-                  IconButton(
-                    icon: Icon(Icons.add),
-                    onPressed: () async {
-                      if (_formKey.currentState!.validate()) {
-                        String memoText = _memoController.text;
-                        String date = DateTime.now().toIso8601String();
-                        await dbHelper.insertMemo(date, memoText);
-                        _memoController.clear();
-                        setState(() {});
-                      }
-                    },
-                  ),
-                ],
-              ),
-            ),
+          TextField(
+            controller: contentController,
+            decoration: InputDecoration(hintText: 'Enter your todo'),
           ),
-          Expanded(
-            child: FutureBuilder<List<Map<String, dynamic>>>(
-              future: dbHelper.getAllMemos(),
-              builder: (BuildContext context, AsyncSnapshot<List<Map<String, dynamic>>> snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return Center(child: CircularProgressIndicator());
-                } else if (snapshot.hasError) {
-                  return Center(child: Text('Error: ${snapshot.error}'));
-                } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                  return Center(child: Text('No memos found'));
-                } else {
-                  List<Map<String, dynamic>> memos = snapshot.data!;
-                  return ListView.builder(
-                    itemCount: memos.length,
+          SizedBox(height: 20),
+          ElevatedButton(
+            onPressed: () async {
+              String content = contentController.text;
+              if (content.isNotEmpty) {
+                await widget.dbHelper.insertTodo(Todo(content: content));
+                contentController.clear();
+                setState(() {
+                  todos = widget.dbHelper.getTodos();
+                });
+              }
+            },
+            child: Text('Add Todo'),
+          ),
+          SizedBox(height: 20),
+          FutureBuilder(
+            future: todos,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return CircularProgressIndicator();
+              } else if (snapshot.hasError) {
+                return Text('Error: ${snapshot.error}');
+              } else {
+                List<Todo> todoList = snapshot.data as List<Todo>;
+                return Expanded(
+                  child: ListView.builder(
+                    itemCount: todoList.length,
                     itemBuilder: (context, index) {
-                      String memoText = memos[index]['memo'];
-                      String date = memos[index]['date'];
                       return ListTile(
-                        title: Text(memoText),
-                        subtitle: Text(date),
+                        title: Text(todoList[index].content),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: Icon(Icons.edit),
+                              onPressed: () {
+                                _editTodo(context, todoList[index]);
+                              },
+                            ),
+                            IconButton(
+                              icon: Icon(Icons.delete),
+                              onPressed: () {
+                                _deleteTodo(context, todoList[index]);
+                              },
+                            ),
+                          ],
+                        ),
                       );
                     },
-                  );
-                }
-              },
-            ),
+                  ),
+                );
+              }
+            },
           ),
         ],
       ),
+    );
+  }
+
+  void _editTodo(BuildContext context, Todo todo) {
+    contentController.text = todo.content;
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Edit Todo'),
+          content: TextField(
+            controller: contentController,
+            decoration: InputDecoration(hintText: 'Enter your edited todo'),
+          ),
+          actions: [
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                String content = contentController.text;
+                if (content.isNotEmpty) {
+                  todo.content = content;
+                  await widget.dbHelper.updateTodo(todo);
+                  Navigator.pop(context);
+                  setState(() {
+                    todos = widget.dbHelper.getTodos();
+                  });
+                }
+              },
+              child: Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _deleteTodo(BuildContext context, Todo todo) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Delete Todo'),
+          content: Text('Are you sure you want to delete this todo?'),
+          actions: [
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                await widget.dbHelper.deleteTodo(todo.id!);
+                Navigator.pop(context);
+                setState(() {
+                  todos = widget.dbHelper.getTodos();
+                });
+              },
+              child: Text('Delete'),
+            ),
+          ],
+        );
+      },
     );
   }
 }

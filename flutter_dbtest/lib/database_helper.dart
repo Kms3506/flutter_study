@@ -1,43 +1,65 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
+import 'memo.dart';
 
 class DatabaseHelper {
-  static final DatabaseHelper _instance = DatabaseHelper._internal();
-  factory DatabaseHelper() => _instance;
   static Database? _database;
-
-  DatabaseHelper._internal();
 
   Future<Database> get database async {
     if (_database != null) return _database!;
-    _database = await _initDatabase();
+
+    _database = await initDatabase();
     return _database!;
   }
 
-  Future<Database> _initDatabase() async {
-    String path = join(await getDatabasesPath(), 'memos.db');
+  Future<Database> initDatabase() async {
+    String path = join(await getDatabasesPath(), 'todo.db');
     return await openDatabase(
       path,
       version: 1,
-      onCreate: (db, version) {
-        return db.execute(
-          'CREATE TABLE memos(id INTEGER PRIMARY KEY AUTOINCREMENT, date TEXT, memo TEXT)', // 스키마 확인
-        );
+      onCreate: (db, version) async {
+        await db.execute('''
+          CREATE TABLE todos(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            content TEXT
+          )
+        ''');
       },
     );
   }
 
-  Future<void> insertMemo(String date, String memo) async {
-    final db = await database;
-    await db.insert(
-      'memos',
-      {'date': date, 'memo': memo},
-      conflictAlgorithm: ConflictAlgorithm.replace,
+  Future<int> insertTodo(Todo todo) async {
+    Database db = await database;
+    return await db.insert('todos', todo.toMap());
+  }
+
+  Future<List<Todo>> getTodos() async {
+    Database db = await database;
+    List<Map<String, dynamic>> maps = await db.query('todos');
+    return List.generate(maps.length, (index) {
+      return Todo(
+        id: maps[index]['id'],
+        content: maps[index]['content'],
+      );
+    });
+  }
+
+  Future<void> updateTodo(Todo todo) async {
+    Database db = await database;
+    await db.update(
+      'todos',
+      todo.toMap(),
+      where: 'id = ?',
+      whereArgs: [todo.id],
     );
   }
 
-  Future<List<Map<String, dynamic>>> getAllMemos() async {
-    final db = await database;
-    return await db.query('memos');
+  Future<void> deleteTodo(int id) async {
+    Database db = await database;
+    await db.delete(
+      'todos',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
   }
 }
