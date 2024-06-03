@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-//import 'memo.dart';
+import 'memo.dart';
 
 class Screen2 extends StatelessWidget {
   @override
@@ -36,15 +36,15 @@ class Screen2 extends StatelessWidget {
       leading: Image.asset(image),
       title: Text(title),
       subtitle: Text(subtitle),
-      // onTap: () {
-      //   // 해당 목록을 클릭하면 Memo 페이지로 이동합니다.
-      //   Navigator.push(
-      //     context,
-      //     MaterialPageRoute(
-      //       builder: (context) => Memo(title: title),
-      //     ),
-      //   );
-      // },
+      onTap: () {
+        // 해당 목록을 클릭하면 Memo 페이지로 이동합니다.
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => Memo(title: title),
+          ),
+        );
+      },
     );
   }
 }

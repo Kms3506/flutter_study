@@ -1,55 +1,196 @@
-// import 'package:flutter/material.dart';
-// import 'button_style.dart';
+import 'package:flutter/material.dart';
+import 'button_style.dart';
+import '../class/testmodel.dart';
+import '../database_helper.dart';
 
-// class Memo extends StatefulWidget {
-//   final String title;
+class Memo extends StatefulWidget {
+  final String title;
 
-//   const Memo({Key? key, required this.title}) : super(key: key);
+  const Memo({Key? key, required this.title}) : super(key: key);
 
-//   @override
-//   _MemoScreenState createState() => _MemoScreenState();
-// }
+  @override
+  _MemoScreenState createState() => _MemoScreenState();
+}
 
-// class _MemoScreenState extends State<Memo> {
-//   String memoText = ''; // 메모 텍스트
+class _MemoScreenState extends State<Memo> {
+  late Future<List<Todo>> todos;
+  final TextEditingController _memoController = TextEditingController();
 
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       appBar: AppBar(
-//         title: Text(widget.title),
-//       ),
-//       body: Padding(
-//         padding: EdgeInsets.all(20),
-//         child: Column(
-//           crossAxisAlignment: CrossAxisAlignment.stretch,
-//           children: [
-//             Expanded(
-//               child: TextField(
-//                 maxLines: null,
-//                 onChanged: (text) {
-//                   setState(() {
-//                     memoText = text;
-//                   });
-//                 },
-//                 decoration: InputDecoration(
-//                   hintText: '메모를 입력하세요...',
-//                   border: OutlineInputBorder(),
-//                 ),
-//               ),
-//             ),
-//             ElevatedButton(
-//               onPressed: () {
-//                 // 메모 저장 등의 작업을 수행할 수 있습니다.
-//                 // 여기서는 간단히 메모를 출력합니다.
-//                 print('메모 내용: $memoText');
-//               },
-//               style: MyButtonStyle.outlinedButtonStyle,
-//               child: Text('저장'),
-//             ),
-//           ],
-//         ),
-//       ),
-//     );
-//   }
-// }
+  @override
+  void initState() {
+    super.initState();
+    todos = DatabaseHelper().getTodos();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(widget.title),
+      ),
+      body: Padding(
+        padding: EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _memoController,
+                    maxLines: null,
+                    onChanged: (text) {},
+                    decoration: InputDecoration(
+                      // hintText: '메모를 입력하세요...',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                ),
+                SizedBox(width: 10),
+                ElevatedButton(
+                  onPressed: () {
+                    _saveMemo(_memoController.text);
+                  },
+                  style: MyButtonStyle.outlinedButtonStyle,
+                  child: Text('저장'),
+                ),
+              ],
+            ),
+            SizedBox(height: 20),
+            Expanded(
+              flex: 2,
+              child: FutureBuilder<List<Todo>>(
+                future: todos,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return Center(child: CircularProgressIndicator());
+                  } else if (snapshot.hasError) {
+                    return Text('Error: ${snapshot.error}');
+                  } else {
+                    List<Todo> todoList = snapshot.data!;
+                    return ListView.builder(
+                      itemCount: todoList.length,
+                      itemBuilder: (context, index) {
+                        final todo = todoList[index];
+                        return ListTile(
+                          title: Text(todo.content),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                icon: Icon(Icons.edit),
+                                onPressed: () {
+                                  _editMemo(todo);
+                                },
+                              ),
+                              IconButton(
+                                icon: Icon(Icons.delete),
+                                onPressed: () {
+                                  _deleteMemo(todo);
+                                },
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    );
+                  }
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _saveMemo(String memo) async {
+    if (memo.isNotEmpty) {
+      await DatabaseHelper().insertTodo(Todo(content: memo));
+      _memoController.clear();
+      setState(() {
+        todos = DatabaseHelper().getTodos();
+      });
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('메모가 저장되었습니다.'),
+      ));
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('메모를 입력하세요.'),
+      ));
+    }
+  }
+
+  void _editMemo(Todo todo) async {
+    _memoController.text = todo.content;
+    await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('메모 수정'),
+        content: TextField(
+          controller: _memoController,
+          // decoration: InputDecoration(hintText: '메모를 수정하세요...'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            child: Text('취소'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              if (_memoController.text.isNotEmpty) {
+                todo.content = _memoController.text;
+                await DatabaseHelper().updateTodo(todo);
+                setState(() {
+                  todos = DatabaseHelper().getTodos();
+                });
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  content: Text('메모가 수정되었습니다.'),
+                ));
+                Navigator.pop(context);
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  content: Text('메모를 입력하세요.'),
+                ));
+              }
+            },
+            child: Text('저장'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _deleteMemo(Todo todo) async {
+    await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('메모 삭제'),
+        content: Text('이 메모를 삭제하시겠습니까?'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            child: Text('취소'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              await DatabaseHelper().deleteTodo(todo.id!);
+              setState(() {
+                todos = DatabaseHelper().getTodos();
+              });
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                content: Text('메모가 삭제되었습니다.'),
+              ));
+              Navigator.pop(context);
+            },
+            child: Text('삭제'),
+          ),
+        ],
+      ),
+    );
+  }
+}
