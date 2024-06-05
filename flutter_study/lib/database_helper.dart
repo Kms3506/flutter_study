@@ -24,6 +24,13 @@ class DatabaseHelper {
             content TEXT
           )
         ''');
+        await db.execute('''
+          CREATE TABLE memos(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            date TEXT,
+            memo TEXT
+          )
+        ''');
       },
     );
   }
@@ -62,4 +69,66 @@ class DatabaseHelper {
       whereArgs: [id],
     );
   }
+  // 메모 추가 함수
+  Future<void> insertMemo(String date, String memo) async {
+    final db = await database;
+    try {
+      await db.insert(
+        'memos',
+        {'date': date, 'memo': memo},
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+    } catch (e) {
+      // 에러 처리
+      throw Exception('Insert memo failed: $e');
+    }
+  }
+
+  // 메모 업데이트 함수
+  Future<void> updateMemo(String date, String memo) async {
+    final db = await database;
+    try {
+      await db.update(
+        'memos',
+        {'memo': memo},
+        where: 'date = ?',
+        whereArgs: [date],
+      );
+    } catch (e) {
+      // 에러 처리
+      throw Exception('Update memo failed: $e');
+    }
+  }
+
+  // 특정 날짜의 메모 가져오기 함수
+  Future<String?> getMemo(String date) async {
+    final db = await database;
+    try {
+      List<Map<String, dynamic>> maps = await db.query(
+        'memos',
+        where: 'date = ?',
+        whereArgs: [date],
+      );
+      if (maps.isNotEmpty) {
+        return maps.first['memo'] as String?;
+      }
+      return null;
+    } catch (e) {
+      // 에러 처리
+      throw Exception('Get memo failed: $e');
+    }
+  }
+
+  // 데이터베이스 연결 닫기
+  Future<void> close() async {
+    final db = await database;
+    try {
+      await db.close();
+    } catch (e) {
+      // 에러 처리
+      throw Exception('Close database failed: $e');
+    }
+  }
 }
+  
+
