@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'button_style.dart';
-import '../class/testmodel.dart';
+import '../class/list1.dart';
 import '../database_helper.dart';
 
 class Memo extends StatefulWidget {
@@ -13,13 +13,13 @@ class Memo extends StatefulWidget {
 }
 
 class _MemoScreenState extends State<Memo> {
-  late Future<List<Todo>> todos;
+  late Future<List<ListItem1>> listItems;
   final TextEditingController _memoController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    todos = DatabaseHelper().getTodos();
+    listItems = DatabaseHelper().getListItems();
   }
 
   @override
@@ -59,34 +59,34 @@ class _MemoScreenState extends State<Memo> {
             SizedBox(height: 20),
             Expanded(
               flex: 2,
-              child: FutureBuilder<List<Todo>>(
-                future: todos,
+              child: FutureBuilder<List<ListItem1>>(
+                future: listItems,
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return Center(child: CircularProgressIndicator());
                   } else if (snapshot.hasError) {
                     return Text('Error: ${snapshot.error}');
                   } else {
-                    List<Todo> todoList = snapshot.data!;
+                    List<ListItem1> listItemList = snapshot.data!;
                     return ListView.builder(
-                      itemCount: todoList.length,
+                      itemCount: listItemList.length,
                       itemBuilder: (context, index) {
-                        final todo = todoList[index];
+                        final listItem = listItemList[index];
                         return ListTile(
-                          title: Text(todo.content),
+                          title: Text(listItem.content),
                           trailing: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               IconButton(
                                 icon: Icon(Icons.edit),
                                 onPressed: () {
-                                  _editMemo(todo);
+                                  _editMemo(listItem);
                                 },
                               ),
                               IconButton(
                                 icon: Icon(Icons.delete),
                                 onPressed: () {
-                                  _deleteMemo(todo);
+                                  _deleteMemo(listItem);
                                 },
                               ),
                             ],
@@ -106,10 +106,10 @@ class _MemoScreenState extends State<Memo> {
 
   void _saveMemo(String memo) async {
     if (memo.isNotEmpty) {
-      await DatabaseHelper().insertTodo(Todo(content: memo));
+      await DatabaseHelper().insertListItem(ListItem1(content: memo));
       _memoController.clear();
       setState(() {
-        todos = DatabaseHelper().getTodos();
+        listItems = DatabaseHelper().getListItems();
       });
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('메모가 저장되었습니다.'),
@@ -121,8 +121,8 @@ class _MemoScreenState extends State<Memo> {
     }
   }
 
-  void _editMemo(Todo todo) async {
-    _memoController.text = todo.content;
+  void _editMemo(ListItem1 listItem) async {
+    _memoController.text = listItem.content;
     await showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -141,10 +141,10 @@ class _MemoScreenState extends State<Memo> {
           ElevatedButton(
             onPressed: () async {
               if (_memoController.text.isNotEmpty) {
-                todo.content = _memoController.text;
-                await DatabaseHelper().updateTodo(todo);
+                listItem.content = _memoController.text;
+                await DatabaseHelper().updateListItem(listItem);
                 setState(() {
-                  todos = DatabaseHelper().getTodos();
+                  listItems = DatabaseHelper().getListItems();
                 });
                 ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                   content: Text('메모가 수정되었습니다.'),
@@ -163,7 +163,7 @@ class _MemoScreenState extends State<Memo> {
     );
   }
 
-  void _deleteMemo(Todo todo) async {
+  void _deleteMemo(ListItem1 listItem) async {
     await showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -178,9 +178,9 @@ class _MemoScreenState extends State<Memo> {
           ),
           ElevatedButton(
             onPressed: () async {
-              await DatabaseHelper().deleteTodo(todo.id!);
+              await DatabaseHelper().deleteListItem(listItem.id!);
               setState(() {
-                todos = DatabaseHelper().getTodos();
+                listItems = DatabaseHelper().getListItems();
               });
               ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                 content: Text('메모가 삭제되었습니다.'),

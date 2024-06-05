@@ -1,8 +1,8 @@
-class Todo {
+class ListItem1 {
   int? id;
   String content;
 
-  Todo({this.id, required this.content});
+  ListItem1({this.id, required this.content});
 
   Map<String, dynamic> toMap() {
     return {

@@ -1,6 +1,6 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
-import 'class/testmodel.dart';
+import 'class/list1.dart';
 
 class DatabaseHelper {
   static Database? _database;
@@ -13,13 +13,13 @@ class DatabaseHelper {
   }
 
   Future<Database> initDatabase() async {
-    String path = join(await getDatabasesPath(), 'todo.db');
+    String path = join(await getDatabasesPath(), 'list1.db');
     return await openDatabase(
       path,
       version: 1,
       onCreate: (db, version) async {
         await db.execute('''
-          CREATE TABLE todos(
+          CREATE TABLE list1(
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             content TEXT
           )
@@ -28,36 +28,36 @@ class DatabaseHelper {
     );
   }
 
-  Future<int> insertTodo(Todo todo) async {
+  Future<int> insertListItem(ListItem1 listItem) async {
     Database db = await database;
-    return await db.insert('todos', todo.toMap());
+    return await db.insert('list1', listItem.toMap());
   }
 
-  Future<List<Todo>> getTodos() async {
+  Future<List<ListItem1>> getListItems() async {
     Database db = await database;
-    List<Map<String, dynamic>> maps = await db.query('todos');
+    List<Map<String, dynamic>> maps = await db.query('list1');
     return List.generate(maps.length, (index) {
-      return Todo(
+      return ListItem1(
         id: maps[index]['id'],
         content: maps[index]['content'],
       );
     });
   }
 
-  Future<void> updateTodo(Todo todo) async {
+  Future<void> updateListItem(ListItem1 listItem) async {
     Database db = await database;
     await db.update(
-      'todos',
-      todo.toMap(),
+      'list1',
+      listItem.toMap(),
       where: 'id = ?',
-      whereArgs: [todo.id],
+      whereArgs: [listItem.id],
     );
   }
 
-  Future<void> deleteTodo(int id) async {
+  Future<void> deleteListItem(int id) async {
     Database db = await database;
     await db.delete(
-      'todos',
+      'list1',
       where: 'id = ?',
       whereArgs: [id],
     );
