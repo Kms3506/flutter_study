@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'button_style.dart';
+//import 'button_style.dart';
 import '../class/list1.dart';
 import '../database_helper.dart';
 
@@ -51,7 +51,7 @@ class _MemoScreenState extends State<Memo> {
                   onPressed: () {
                     _saveMemo(_memoController.text);
                   },
-                  style: MyButtonStyle.outlinedButtonStyle,
+                  //style: MyButtonStyle.outlinedButtonStyle,
                   child: Text('저장'),
                 ),
               ],

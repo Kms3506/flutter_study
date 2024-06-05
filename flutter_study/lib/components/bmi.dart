@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'button_style.dart';
+//import 'button_style.dart';
 
 class Bmi extends StatefulWidget {
   @override
@@ -43,7 +43,7 @@ class _BmiState extends State<Bmi> {
                   });
                 }
               },
-              style: MyButtonStyle.outlinedButtonStyle,
+              //style: MyButtonStyle.outlinedButtonStyle,
               child: Text('확인'),
             ),
             

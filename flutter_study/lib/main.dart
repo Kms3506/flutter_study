@@ -10,17 +10,48 @@ void main() {
   runApp(MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
+  static _MyAppState? of(BuildContext context) => context.findAncestorStateOfType<_MyAppState>();
+
+  @override
+  _MyAppState createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  ThemeMode _themeMode = ThemeMode.light;
+
+  void toggleTheme() {
+    setState(() {
+      _themeMode = _themeMode == ThemeMode.light ? ThemeMode.dark : ThemeMode.light;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Navigation Example',
+      title: '헬스 메모 앱',
       theme: ThemeData(
+        brightness: Brightness.light,
         appBarTheme: AppBarTheme(
-          color: Colors.blue, // AppBar의 색상 변경
+          color: Color.fromARGB(128, 130, 60, 128), // AppBar의 색상 변경
+        ),
+        buttonTheme: ButtonThemeData(
+          buttonColor: Colors.white, // 라이트 모드 버튼 배경색
+          textTheme: ButtonTextTheme.primary,
         ),
       ),
+      darkTheme: ThemeData(
+        brightness: Brightness.dark,
+        appBarTheme: AppBarTheme(
+          color: Color.fromARGB(128, 40, 18, 39), // 다크 모드에서 AppBar의 색상 변경
+        ),
+        buttonTheme: ButtonThemeData(
+          buttonColor: Colors.black, // 다크 모드 버튼 배경색
+          textTheme: ButtonTextTheme.primary,
+        ),
+      ),
+      themeMode: _themeMode,
       home: LoadingToMainScreen(), // 로딩 화면으로 설정
     );
   }
@@ -76,7 +107,7 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Navigation Example'),
+        title: Text('운동을 합시다'),
       ),
       body: _widgetOptions.elementAt(_selectedIndex),
       bottomNavigationBar: BottomNavigationBar(
@@ -95,7 +126,7 @@ class _MyHomePageState extends State<MyHomePage> {
           ),
         ],
         currentIndex: _selectedIndex,
-        selectedItemColor: Colors.blue,
+        //selectedItemColor: Colors.blue,
         onTap: _onItemTapped,
       ),
     );
