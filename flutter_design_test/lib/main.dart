@@ -13,7 +13,7 @@ class MyApp extends StatelessWidget {
       title: 'Material 3 Flutter App',
       theme: ThemeData(
         useMaterial3: true, // Material 3 적용
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.orange), // 색상 테마
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue), // 색상 테마
         textTheme: const TextTheme(
           displayLarge: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, fontFamily: 'Roboto'), // 큰 제목 글꼴 스타일
           bodyLarge: TextStyle(fontSize: 16, fontFamily: 'Roboto'), // 본문 글꼴 스타일
