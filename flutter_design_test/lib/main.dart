@@ -7,15 +7,34 @@ void main() {
 class MyApp extends StatelessWidget {
   const MyApp({Key? key}) : super(key: key);
 
-  @override
+   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter App',
-      home: const MainPage(),
+      title: 'Material 3 Flutter App',
       theme: ThemeData(
-        useMaterial3: false,  // Flutter에서 Material 3 사용을 비활성화
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),  // 기본 색상 테마를 파란색으로 설정
+        useMaterial3: true, // Material 3 적용
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.orange), // 색상 테마
+        textTheme: const TextTheme(
+          displayLarge: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, fontFamily: 'Roboto'), // 큰 제목 글꼴 스타일
+          bodyLarge: TextStyle(fontSize: 16, fontFamily: 'Roboto'), // 본문 글꼴 스타일
+        ),
+        cardTheme: CardTheme(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16), // 카드의 모서리를 둥글게
+          ),
+        ),
+        floatingActionButtonTheme: FloatingActionButtonThemeData(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24), // 플로팅 액션 버튼의 모서리 둥글게
+          ),
+        ),
+        dialogTheme: DialogTheme(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24), // 다이얼로그의 모서리 둥글게
+          ),
+        ),
       ),
+      home: const MainPage(),
     );
   }
 }
